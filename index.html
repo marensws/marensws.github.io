@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Visualisation</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script src="d3.v5.min.js"></script>
+</head>
+<body>
+<ul id="header">
+    <li><a id="visualisation" href="index.html"> Visualisation </a></li>
+    <li><a id="summary" href="summary.html"> Summary </a></li>
+    <li><a id="resources" href="resources.html">Resources</a></li>
+    <li id="student" style="float: right">Student number: 1744487</li>
+
+</ul>
+<div id="main">
+    <h1>A visualisation of death rate and cause</h1>
+    <div class="toggle">
+        <input type="radio" name="gender" value="1000" id="women-radio" checked="checked" />
+        <label for="women-radio">Women</label>
+        <input type="radio" name="gender" value="500" id="both-radio" />
+        <label for="both-radio">Both</label>
+        <input type="radio" name="gender" value="0" id="men-radio" />
+        <label for="men-radio">Men</label>
+    </div>
+    <div id="start-wrapper">
+        <button id="start" onclick="startButton()">Start</button>
+        <button id="restart" onclick="restartbutton()">Restart</button>
+    </div>
+    <p id="description">
+        As medicine has advanced, hopes of living to a hundred are becoming less farfetched every day. Children
+        born in 2020 are estimated to live 81.4 years, almost 24 years more than children in 1920. Although most
+        people expect to live until old age, it is a fact of life that death can occur at any age. In a group of 1000
+        people, how does the rate of mortality look? What proportion will statistically be left at 100? What are the most common ways to die?  Using data from the
+        <a href="https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/methodologies/nationallifetablesqmi">
+            National Life Tables</a>, a group of peers is simulated to show their journey on the way to 100. <br><br>
+
+        Each circle in the visualisation represents a person. As time
+        progresses and each person ages, they eventually die. This is represented by the circles moving to the category of the cause of death.
+        At the end of the simulation, the circles left in the middle are the people who make it to a hundred.<br><br>
+
+        The histogram at the bottom of the page shows the number of people dying at each age alongside the national life expectancy.<br><br>
+
+        To choose the gender of the population select Women, Both or Men.
+
+        Press start to begin the simulation.
+    </p>
+    <h2 id="timecount">Age: <span class="cnt">0</span></h2>
+        <div id="chart">
+        </div>
+        <div id="histogram"></div>
+</div>
+
+<script>
+    var time_so_far;
+    let simulation_on = false;
+    let simulation;
+
+    function startButton() {
+        if(!simulation_on) {
+            startSimulation();
+        }
+    }
+
+    function restartbutton() {
+        if(simulation_on) {
+            simulation.stop();
+
+            simulation_on = false;
+            d3.select("#chart").html("");
+            d3.select("#histogram").html("");
+
+            time_so_far=0;
+            d3.select("#timecount .cnt").text(time_so_far);
+            startSimulation();
+        }
+    }
+
+        function startSimulation() {
+            //Remove start and restart buttons
+            d3.select("#start").style("display", "none");
+            d3.select("#restart").style("display", "none");
+
+            // Dimensions of chart.
+            d3.select("#description").style("display", "none");
+            d3.select("h2").style("opacity", "1");
+            simulation_on=true;
+            const margin = { top: 20, right: 20, bottom: 20, left: 20 },
+                width = 1300 - margin.left - margin.right,
+                height = 600 - margin.top - margin.bottom;
+
+            //Create chart container
+            const svg = d3.select("#chart").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            d3.select("#chart").style("width", (width+margin.left+margin.right)+"px");
+
+
+            // Group coordinates and meta info.
+            const groups = {
+                "accidents": { x: 20*width/100, y: 15*height/100, color: "#5ab473", cnt: 0, fullname: "Accidents" },
+                "homicide": { x: 20*width/100, y: 40*height/100, color: "#b0ae2e", cnt: 0, fullname: "Homicide" },
+                "epilepsy": { x: 65*width/100, y: 85*height/100, color: "#e58e8d", cnt: 0, fullname: "Epilepsy" },
+                "liver": { x: 20*width/100, y: 85*height/100, color: "#c8a3d1", cnt: 0, fullname: "Liver disease" },
+                "cancer": { x: 35*width/100, y: 85*height/100, color: "#8dc3ce", cnt: 0, fullname: "Cancer" },
+                "deformation": { x: 35*width/100, y: 15*height/100, color: "#7398bc", cnt: 0, fullname: "Genetic deformation" },
+                "respiratory": { x: 50*width/100, y: 85*height/100, color: "#afb4e5", cnt: 0, fullname: "Respiratory illness" },
+                "influenza": { x: 80*width/100, y: 40*height/100, color: "#d0a464", cnt: 0, fullname: "Influenza and pneumonia" },
+                "dementia": { x: 20*width/100, y: 65*height/100, color: "#a8b84d", cnt: 0, fullname: "Dementia" },
+                "heart": { x: 65*width/100, y: 15*height/100, color: "#b1dd8e", cnt: 0, fullname: "Cardiovascular disease" },
+                "cerebral": { x: 80*width/100, y: 65*height/100, color: "#ce8293", cnt: 0, fullname: "Cerebrovascular disease" },
+                "septicaemia": { x: 80*width/100, y: 15*height/100, color: "#bbd176", cnt: 0, fullname: "Septicaemia" },
+                "suicide": { x: 50*width/100, y: 15*height/100, color: "#79BACE", cnt: 0, fullname: "Suicide" },
+                "other": { x: 80*width/100, y: 85*height/100, color: "#d69e3a", cnt: 0, fullname: "Other" },
+                "alive": { x: width/2, y: height/2, color: "#808080", cnt: 0, fullname: "" },
+            };
+
+            //Create the number of women indicated by radio button choice.
+            var test = document.getElementsByName("gender");
+            let numberOfWomen;
+            for (let i=0; i < test.length; i++) {
+                if (test[i].checked===true) {
+                    numberOfWomen = test[i].value;
+                }
+            }
+            let death_rates_women = [];
+            let death_rates_men = [];
+            createHistogram(numberOfWomen);
+            d3.csv("Death rate and cause/women-Women 2018.csv", function (data) {
+                death_rates_women.push(data);
+            });
+            d3.csv("Death rate and cause/men-Men 2018.csv", function (data) {
+                death_rates_men.push(data);
+            });
+
+            let people = [];
+            for(let i = 0;i<numberOfWomen; i++) {
+                people.push({id:i, gender:"Female"});
+            }
+            for(let i = numberOfWomen; i<1000;i++) {
+                people.push({id:i, gender: "Male"});
+            }
+            //Let all people be alive at the beginning.
+            let nodes = people.map(function(d){
+                return {
+                    id: d.id,
+                    x: groups["alive"].x + Math.random(),
+                    y: groups["alive"].y + Math.random(),
+                    r: 7,
+                    color: groups["alive"].color,
+                    group: "alive",
+                    age:0,
+                    gender: d.gender,
+                }
+            });
+
+
+
+            // Circle for each node.
+            const circle = svg.append("g")
+                .selectAll("circle")
+                .data(nodes)
+                .join("circle")
+                .attr("id", d => d.id)
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y)
+                .attr("fill", d => d.color)
+                .attr("class", "node");
+
+            // Ease in the circles.
+            circle.transition()
+                .delay((d, i) => i * 5)
+                .duration(30)
+                .attrTween("r", d => {
+                    const i = d3.interpolate(0, d.r);
+                    return t => d.r = i(t);
+                });
+
+            // Group name labels
+            svg.selectAll('.grp')
+                .data(d3.keys(groups))
+                .join("text")
+                .attr("class", "grp")
+                .attr("text-anchor", "middle")
+                .attr("x", d => groups[d].x)
+                .attr("y", d => groups[d].y)
+                .text(d => groups[d].fullname);
+
+            simulation = d3.forceSimulation(nodes)
+                .force("x", d => d3.forceX(d.x))
+                .force("y", d => d3.forceY(d.y))
+                .force("cluster", forceCluster())
+                .force("collide", forceCollide())
+                .alpha(.09)
+                .alphaDecay(0);
+
+            // Adjust position of circles.
+            simulation.on("tick", () => {
+                circle
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y)
+                    .attr("fill", d => groups[d.group].color);
+            });
+
+            //Start simulation after five seconds
+            d3.timeout(timer, 5000);
+            time_so_far = 0;
+
+            //Main function, moves the circles
+            function timer() {
+                if(simulation_on) {
+                    //time_so_far += 1;
+                    let deaths = 0;
+                    nodes.forEach(function (o) {
+                            let random1 = Math.random();
+                            if (o.group === "alive") {
+                                let death_rates;
+                                if (o.gender === "Female") {
+                                    death_rates = death_rates_women;
+                                } else if (o.gender === "Male") {
+                                    death_rates = death_rates_men;
+                                }
+                                if (random1 < death_rates[time_so_far].death_rate) {
+                                    deaths++;
+                                    var cumulative_probability = 0;
+                                    let random2 = Math.random();
+                                    let c;
+                                    for (c of Object.keys(groups)) {
+                                        const a = groups[c].fullname;
+                                        let b = parseFloat(death_rates[time_so_far][a]) || 0;
+                                        cumulative_probability += b;
+                                        if (random2 < cumulative_probability) {
+                                            groups.alive.cnt--;
+                                            o.group = c;
+                                            groups[c].cnt++;
+                                            break;
+                                        }
+
+                                    }
+                                }
+                            } else {
+                                o.age += 1;
+                            }
+                        }
+                    );
+
+                    updateHistogram(deaths);
+                    // Increment time.
+                    time_so_far += 1;
+                    d3.select("#timecount .cnt").text(time_so_far);
+
+                    // Update counters.
+                    svg.selectAll('.grpcnt').text(d => groups[d].cnt);
+
+                    // Do it again.
+                    if (time_so_far < 100) {
+                        d3.timeout(timer, 700);
+                    }
+                    else{
+                        d3.select("#restart").style("display", "inline");
+                    }
+                }
+            } // @end timer()
+            function forceCluster() {
+                const strength = .15;
+                let nodes;
+
+                function force(alpha) {
+                    const l = alpha * strength;
+                    for (const d of nodes) {
+                        d.vx -= (d.x - groups[d.group].x) * l;
+                        d.vy -= (d.y - groups[d.group].y) * l;
+                    }
+                }
+                force.initialize = _ => nodes = _;
+
+                return force;
+            }
+            // Force for collision detection.
+            function forceCollide() {
+                const alpha = 0.2; // fixed for greater rigidity!
+                const padding1 = 1; // separation between same-color nodes
+                const padding2 = 2; // separation between different-color nodes
+                let nodes;
+                let maxRadius;
+
+                function force() {
+                    const quadtree = d3.quadtree(nodes, d => d.x, d => d.y);
+                    for (const d of nodes) {
+                        const r = d.r + maxRadius;
+                        const nx1 = d.x - r, ny1 = d.y - r;
+                        const nx2 = d.x + r, ny2 = d.y + r;
+                        quadtree.visit((q, x1, y1, x2, y2) => {
+
+                            if (!q.length) do {
+                                if (q.data !== d) {
+                                    const r = d.r + q.data.r + (d.group === q.data.group ? padding1 : padding2);
+                                    let x = d.x - q.data.x, y = d.y - q.data.y, l = Math.hypot(x, y);
+                                    if (l < r) {
+                                        l = (l - r) / l * alpha;
+                                        d.x -= x *= l, d.y -= y *= l;
+                                        q.data.x += x, q.data.y += y;
+                                    }
+                                }
+                            } while (q = q.next);
+                            return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+                        });
+                    }
+                }
+
+                force.initialize = _ => maxRadius = d3.max(nodes = _, d => d.r) + Math.max(padding1, padding2);
+
+                return force;
+            }
+        }
+
+    // set the dimensions and margins of the graph
+    var margin_histogram = {top: 10, right: 30, bottom: 60, left: 40},
+        width_histogram = 1200 - margin_histogram.left - margin_histogram.right,
+        height_histogram = 500 - margin_histogram.top - margin_histogram.bottom;
+    var svg_histogram;
+    var x;
+    var y;
+    function createHistogram(noWomen) {
+        // append the svg object to the body of the page
+        svg_histogram = d3.select("#histogram")
+            .append("svg")
+            .attr("width", width_histogram + margin_histogram.left + margin_histogram.right)
+            .attr("height", height_histogram + margin_histogram.top + margin_histogram.bottom)
+            .append("g")
+            .attr("transform",
+                "translate(" + margin_histogram.left + "," + margin_histogram.top + ")");
+
+        // X axis: scale and draw:
+        x = d3.scaleLinear()
+            .domain([0, 100])
+            .range([0, width_histogram]);
+        svg_histogram.append("g")
+            .attr("transform", "translate(0," + height_histogram + ")")
+            .call(d3.axisBottom(x));
+
+        // Y axis: scale and draw:
+        y = d3.scaleLinear()
+            .domain([0, 100])
+            .range([height_histogram, 0]);
+        svg_histogram.append("g")
+            .call(d3.axisLeft(y));
+
+        //Axis labels
+        svg_histogram.append("text")
+            .attr("transform",
+                "translate(" + (width_histogram/2) + " ," +
+                (height_histogram + margin_histogram.top + 20) + ")")
+            .style("text-anchor", "middle")
+            .text("Age of death");
+        svg_histogram.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0 - margin_histogram.left)
+            .attr("x",0 - (height_histogram / 2))
+            .attr("dy", "1em")
+            .style("text-anchor", "middle")
+            .text("Number of new people dead");
+
+        //Creates a line indicating life expectancy based on the population chosen(ie gender)
+        let label_text;
+        let lifeExpectancy;
+        if(noWomen == 1000) {
+            label_text = "UK life expectancy for women 2018";
+            lifeExpectancy = 82.93;
+        }
+        else if(noWomen == 500) {
+            label_text = "UK life expectancy 2018";
+            lifeExpectancy = (82.93+79.25)/2;
+        }
+        else {
+            label_text= "UK life expectancy for men 2018";
+            lifeExpectancy = 79.25;
+        }
+        svg_histogram.append("line")
+            .attr('class', 'zero')
+            .attr('x1', x(lifeExpectancy))
+            .attr('y1', 0)
+            .attr('x2', x(lifeExpectancy))
+            .attr('y2', height_histogram)
+            .style('stroke', '#003A5D')
+            .style('stroke-width', 1)
+            .style('stroke-dasharray', 6)
+        svg_histogram.append("text")
+            .attr("transform",
+                "translate(" + x(lifeExpectancy) + " ," +
+                (height_histogram + margin_histogram.top + 20) + ")")
+            .style("text-anchor", "middle")
+            .style("font-size", "10px")
+            .text(label_text);
+
+    }
+
+    //Updates the histogram with number of deaths at each age.
+    function updateHistogram(deaths) {
+        if(deaths) {
+            svg_histogram
+                .append("rect")
+                .attr("x", 1)
+                .attr("transform", "translate(" + x(time_so_far) + "," + y(deaths) + ")")
+                .attr("width",width_histogram/100)
+                .attr("height", height_histogram - y(deaths))
+                .style("fill", "#69b3a2");
+        }
+    }
+</script>
+</body>
+</html>

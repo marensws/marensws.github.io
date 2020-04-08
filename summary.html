@@ -22,28 +22,31 @@
     The simulation uses data from the <a href="https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/methodologies/nationallifetablesqmi">
     National Life Tables</a> which has been formatted into two CSV files containing the
     rate of death at each age alongside the probability for each category of cause of death for both genders. A random number is generated and compared to the death rate for that person's gender.
-    <br>The cause of death is determined in the same way, with a new random number and cumulative cause of death. The statistics for cause of death are taken from
+    <br>The cause of death is determined in the same way, by comparing a new random number and cumulative cause of death. The statistics for cause of death are taken from
     reference tables of number of deaths caused by various diseases and accidents and subsequently translated into relative frequencies.
     <h3>Findings</h3>
         The visualisation first and foremost visualises the impact of age on rate of death. After the first year, there are very few who die up until around age 60 which is when the number of people dying increases significantly.
-        At age 100, there are almost always individuals left in the middle, representing those who make it to 100. Usually for women this number is around 15(~1.5%), while for men it is normally not higher than 10(<1%).
-    This is to be expected as women have a higher life expectancy. Other interesting variations between the genders include top killer of each gender. For men this is cardiovascular disease, which includes diseases such as heart attack and stroke <a href="https://www.heart.org/en/health-topics/consumer-healthcare/what-is-cardiovascular-disease">heart attack and stroke</a>. For
-    women, the number one cause of death is dementia, which includes Alzheimer's disease. These diseases usually affect the older population, and by paying close attention to the beginning of
-    the simulation, one can see that genetic deformation and epilepsy. As a person enter their teens and twenties, they are most likely to die from suicide and accidents. Here, we can see a marked difference between men and women.
-    This reflects the high male suicide rate which is a <a href="https://www.mentalhealth.org.uk/blog/suicide-prevention-universities">significant concern</a> in schools and universities.
+        At age 100, there are almost always individuals left in the middle, representing those who remain alive. Usually for women this number is around 15(~1.5%), while for men it is normally not higher than 10(<1%).
+    This is to be expected as women have a higher life expectancy. Other interesting variations between the genders include most frequent cause of death for each gender. For men this is cardiovascular disease, which includes diseases such as <a href="https://www.heart.org/en/health-topics/consumer-healthcare/what-is-cardiovascular-disease">heart attack and stroke</a>. For
+    women, the number one cause of death is dementia, which includes Alzheimer's disease. These diseases usually affect the older population, those who die at a younger age are affected by different diseases. In very young children, genetic deformation and epilepsy are a much more likely cause of death. As a person enters their teens and twenties, they are most likely to die from suicide and accidents. Here, we can again see a difference between men and women.
+    The male population are much more affected by suicide. This reflects the real-world problem of the high male suicide rate which is a <a href="https://www.mentalhealth.org.uk/blog/suicide-prevention-universities">significant concern</a> in schools and universities.
     <h3>Evaluation</h3>
     One of the challenges with creating the visualisation was the categorisation of the different diseases.
     Although I was mainly building on data which had already been categorised, there were too many categories to display at once.
-    By merging categories together, I could enhance the readability of the visualisation. However, this meant sacrificing some of preciseness of the data. Some of the simplifications were relatively straightforward; <i>Accidental threats to breathing</i>, <i>Accidental drowning and submersion'</i>, and <i>Land transport accidents</i> were given the common name of <b>Accidents</b>.
+    By merging categories together, I could enhance the readability of the visualisation. However, this meant sacrificing some of
+    preciseness of the data. Some of the simplifications were relatively straightforward; <i>Accidental threats to breathing</i>,
+    <i>Accidental drowning and submersion'</i>, and <i>Land transport accidents</i> were given the common name of <b>Accidents</b>.
     This compromise was well-justified and had minimal repercussions for the overall impact of the data.
-    A more substantial issue which emerged from this simplification was having to move less frequent causes into the overarching category of <b>Other</b>.
-    This category provides no information about the cause of death, other than it being a less common one. Ideally, this category would hold as few people as possible.
+    A more substantial issue which emerged from this simplification was having to move less frequent causes into the overarching
+    category of <b>Other</b>.
+    This category provides no information about the cause of death, other than it being a less common one.
+    Ideally, this category would hold as few people as possible.
     By moving <i>Genetic deformation</i>, <i>Septicaemia</i> or <i>Epilepsy</i> into the <b>Other</b> category and giving <i>Symptoms, signs and ill-defined conditions</i> category of its own the number of people in the <b>Other</b> category would reduce a lot.
     However, since this category also doesn't offer much more information about cause of death, it was better to keep <i>Genetic deformation</i>, <i>Septicaemia</i> or <i>Epilepsy</i> as it offers insight into a frequent cause of death in young children.
 
     <h3>Conclusion</h3>
         The visualisation is a simplification of the real data, but offers insight into statistics around death, gender and aging. Further work could include analysing years going further back, to see how the death rate and cause have changed through time.
-        Another feature could include a tracking function which would highlight a random circle at the beginning. The highlighted circle would allow the user to follow a specific circle, and in this way create a macro-look at how the data reflects possible scenarios for the user him/herself.
+        Another feature could include a tracking function which would highlight a random circle at the beginning. The highlighted circle would allow the user to follow a specific circle, and in this way create a macro-look at how the data reflects possible scenarios for the user themselves.
     </p>
 </div>
 </body>
